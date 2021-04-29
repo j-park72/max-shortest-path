@@ -133,13 +133,13 @@ def solve(G):
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-input_path = 'inputs/inputs'
-if __name__ == '__main__':
-    inputs = glob.glob(input_path)
-    for input_path in inputs:
-        output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
-        G = read_input_file(input_path)
-        c, k = solve(G)
-        assert is_valid_solution(G, c, k)
-        distance = calculate_score(G, c, k)
-        write_output_file(G, c, k, output_path)
+# input_path = 'inputs/inputs' WRONG PATH FIX IT!!
+# if __name__ == '__main__':
+#     inputs = glob.glob(input_path)
+#     for input_path in inputs:
+#         output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
+#         G = read_input_file(input_path)
+#         c, k = solve(G)
+#         assert is_valid_solution(G, c, k)
+#         distance = calculate_score(G, c, k)
+#         write_output_file(G, c, k, output_path)
