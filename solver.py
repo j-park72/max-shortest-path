@@ -67,7 +67,7 @@ def solve(G):
                         R.append([n] + l)
 
             cache[(str(A),c)] = R
-            
+
             return R
 
         return helper(A,c)
@@ -111,40 +111,19 @@ def solve(G):
         num_k,num_c = 100,5
 
     answer = (G, nx.dijkstra_path_length(G,0,num_nodes-1))
-
-    i,j,k = 0,0,0
     for cc in range(num_c):
         less_cities = graph_generator(G, cc, True)
         for g in less_cities:
-
-            print(i,j,k)
-            
             # Run Dijkstra's Algorithm on every possible route on g w/ up to num_k removed edges
             # copy graph g and remove edge(s). 
             # maybe it's a good idea to save graph or setting of max shortest path 
             for kk in range(1,num_k+1):
-
-                print(i,j,k)
-                bb = 0
                 less_edges = graph_generator(g, kk, False)
                 for graph in less_edges:
-
-                    print(bb)
-
                     p_len = nx.dijkstra_path_length(graph, 0, num_nodes-1)
                     if p_len > answer[1]:
                         answer = (graph, p_len)
 
-                    bb+=1
-
-                k += 1
-
-            j += 1
-
-        i += 1
-
-    print('loop finished')
-    
     c = [v for v in G.nodes if v not in answer[0].nodes]
     k = [e for e in G.edges if e not in answer[0].edges]
     return c,k
