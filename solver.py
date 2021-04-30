@@ -50,16 +50,27 @@ def solve(G):
             A: list of cities/edges that can be removed
             c: # of cities/edges to remove
         Returns:
-            R: list of nodes/edges to remove
+            list of nodes/edges to remove
         """
-        if len(A) == 0 or c == 0 or len(A) < c:
-            return [[]]
-        R = []
-        for i,n in enumerate(A):
-            if len(A)-i >= c:
-                for l in get_removeables(A[i+1:], c-1):
-                    R.append([n] + l)
-        return R
+
+        cache = {}
+
+        def helper(A, c):
+            if len(A) == 0 or c == 0 or len(A) < c:
+                return [[]]
+            elif (str(A),c) in cache:
+                return cache[(str(A),c)]
+            R = []
+            for i,n in enumerate(A):
+                if len(A)-i >= c:
+                    for l in get_removeables(A[i+1:], c-1):
+                        R.append([n] + l)
+
+            cache[(str(A),c)] = R
+            
+            return R
+
+        return helper(A,c)
 
 
     def graph_generator(H, k, city):
@@ -87,6 +98,7 @@ def solve(G):
                 h.remove_edges_from(edges_to_remove)
                 if nx.is_connected(h):
                     L.append(h)
+
         return L 
 
     # Initialize
@@ -100,18 +112,38 @@ def solve(G):
 
     answer = (G, nx.dijkstra_path_length(G,0,num_nodes-1))
 
+    i,j,k = 0,0,0
     for cc in range(num_c):
         less_cities = graph_generator(G, cc, True)
         for g in less_cities:
+
+            print(i,j,k)
+            
             # Run Dijkstra's Algorithm on every possible route on g w/ up to num_k removed edges
             # copy graph g and remove edge(s). 
             # maybe it's a good idea to save graph or setting of max shortest path 
             for kk in range(1,num_k+1):
+
+                print(i,j,k)
+                bb = 0
                 less_edges = graph_generator(g, kk, False)
                 for graph in less_edges:
+
+                    print(bb)
+
                     p_len = nx.dijkstra_path_length(graph, 0, num_nodes-1)
                     if p_len > answer[1]:
                         answer = (graph, p_len)
+
+                    bb+=1
+
+                k += 1
+
+            j += 1
+
+        i += 1
+
+    print('loop finished')
     
     c = [v for v in G.nodes if v not in answer[0].nodes]
     k = [e for e in G.edges if e not in answer[0].edges]
