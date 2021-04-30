@@ -35,8 +35,24 @@ def make_graph(V, e):
     
     return G
 
+
 def solve(G):
     """
+    Args:
+        G: networkx.Graph
+    Returns:
+        c: list of cities to remove
+        k: list of edges to remove
+    """
+    pass
+
+
+def naive_solve(G):
+    """
+    This function will terminate on G with many edges. "many" as in < 1000.
+    Correct algorithm but since the problem is NP-Hard, 
+    but not very useful algorithm cause it takes forever.
+
     Args:
         G: networkx.Graph
     Returns:
@@ -115,8 +131,6 @@ def solve(G):
         less_cities = graph_generator(G, cc, True)
         for g in less_cities:
             # Run Dijkstra's Algorithm on every possible route on g w/ up to num_k removed edges
-            # copy graph g and remove edge(s). 
-            # maybe it's a good idea to save graph or setting of max shortest path 
             for kk in range(1,num_k+1):
                 less_edges = graph_generator(g, kk, False)
                 for graph in less_edges:
