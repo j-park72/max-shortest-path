@@ -25,7 +25,7 @@ def solve(G):
     """
 
     # Heuristic: height of a shortest-path-tree to merge
-    HTC = 3
+    HTC = 5
 
     def nodes_to_edges(nodes):
         """
@@ -145,7 +145,7 @@ def solve(G):
 
 
 # Here's an example of how to run your solver.
-set_type = 'medium'
+set_type = 'small'
 input_path = 'inputs/' + set_type + '/'
 
 # Usage: python3 solver.py test.in
@@ -169,6 +169,7 @@ if __name__ == '__main__':
         output_path = 'tempOutputs/' + set_type + '/' + \
             basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
+        print('solving', basename(normpath(input_path))[:-3])
         c, k = solve(G)
         assert is_valid_solution(G, c, k)
         write_output_file(G, c, k, output_path)
