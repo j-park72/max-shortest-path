@@ -47,33 +47,8 @@ def solve(G):
         k: list of edges to remove
     """
 
-    def get_removeables(A, c):
-        """
-        Args:
-            A: list of cities/edges that can be removed
-            c: # of cities/edges to remove
-        Returns:
-            list of nodes/edges to remove
-        """
-
-        cache = {}
-
-        def helper(A, c):
-            if len(A) == 0 or c == 0 or len(A) < c:
-                return [[]]
-            elif (str(A), c) in cache:
-                return cache[(str(A), c)]
-            R = []
-            for i, n in enumerate(A):
-                if len(A)-i >= c:
-                    for l in get_removeables(A[i+1:], c-1):
-                        R.append([n] + l)
-
-            cache[(str(A), c)] = R
-
-            return R
-
-        return helper(A, c)
+    # Heuristic - height of a shortest-path-tree
+    HTC = 3
 
     def graph_generator(H):
         """
@@ -96,22 +71,28 @@ def solve(G):
         return L
 
     def nodes_to_edges(nodes):
+        """
+        Args:
+            nodes: list of nodes to convert
+        Returns:
+            L: converted list of edges
+        """ 
         edges = []
-
         if len(nodes) == 0:
             return edges
-
         prev = nodes[0]
         for n in nodes[1:]:
             edges.append((prev, n))
             prev = n
-
         return edges
 
     def solver(A, k):
-
-        HTC = 3  # Heuristic - height of a tree
-
+        """
+        Args:
+            A: 
+        Returns:
+            L: converted list of edges
+        """
         def helper(A, k):
             if k == 0:
                 return [A]
@@ -120,15 +101,14 @@ def solve(G):
                 H = A[0].copy()
                 H.remove_edge(e[0], e[1])
                 if nx.is_connected(H):
+                    shortest_path = nx.single_source_dijkstra(H,0,dest)
                     B = (
                         H,
-                        nx.dijkstra_path_length(H, 0, dest),
-                        nodes_to_edges(nx.dijkstra_path(H, 0, dest))
+                        shortest_path[0],
+                        nodes_to_edges(shortest_path[1])
                     )
-
                     for x in helper(B, k-1):
                         R.append(x)
-
             return R
 
         while k > 0:
@@ -140,8 +120,14 @@ def solve(G):
             k -= HTC
 
         return A
-
-    # while k > 0, get shortest path s-t path, for e in s-t path edges remove e then get shortest path.
+    
+    # The main idea here is to come up with a shortest-path-tree 
+    # by removing edges/cities from parent graph's shortest path.
+    # Use Heuristic, HTC which determines how deep I go down the tree 
+    # since going all the way down the tree takes up too much resources.
+    # e.g. height of tree = 5, HTC = 2:
+    # I go down the tree 2 height then amongst the graphs I have so far, I find the one w/ max shortest path. 
+    # Then go 2 more down the tree and so on until I reach the bottom of the tree. 
     # Then compare and go w/ max shortest path.
 
     # Initialize
@@ -153,15 +139,17 @@ def solve(G):
     elif G.number_of_nodes() <= 100:
         num_k, num_c = 100, 5
 
-    answer = (G, nx.dijkstra_path_length(G, 0, dest))
-    A = (G, nx.dijkstra_path_length(G, 0, dest),
-         nodes_to_edges(nx.dijkstra_path(G, 0, dest)))
+    # Remove edges
+    dijkstra = nx.single_source_dijkstra(G,0,dest)
+    answer = (G, dijkstra[0])
+    A = (G, dijkstra[0], nodes_to_edges(dijkstra[1]))
     if answer[1] <= A[1]:
         A = solver(A, num_k)
         if answer[1] < A[1]:
             answer = A
     k = [e for e in G.edges if e not in answer[0].edges]
 
+    # Remove cities
     for cc in range(num_c):
         less_cities = graph_generator(answer[0])
         for g in less_cities:
@@ -174,126 +162,31 @@ def solve(G):
     return c, k
 
 
-def naive_solve(G):
-    """
-    This function will terminate on G with many edges. "many" as in < 1000.
-    Correct algorithm but since the problem is NP-Hard, 
-    but not very useful algorithm cause it takes forever.
-
-    Args:
-        G: networkx.Graph
-    Returns:
-        c: list of cities to remove
-        k: list of edges to remove
-    """
-
-    def get_removeables(A, c):
-        """
-        Args:
-            A: list of cities/edges that can be removed
-            c: # of cities/edges to remove
-        Returns:
-            list of nodes/edges to remove
-        """
-
-        cache = {}
-
-        def helper(A, c):
-            if len(A) == 0 or c == 0 or len(A) < c:
-                return [[]]
-            elif (str(A), c) in cache:
-                return cache[(str(A), c)]
-            R = []
-            for i, n in enumerate(A):
-                if len(A)-i >= c:
-                    for l in get_removeables(A[i+1:], c-1):
-                        R.append([n] + l)
-
-            cache[(str(A), c)] = R
-
-            return R
-
-        return helper(A, c)
-
-    def graph_generator(H, k, city):
-        """
-        Args:
-            H: networkx.Graph
-            k: # of cities/edges to remove
-            city: variable to check whether to remove cities or edges
-        Returns:
-            L: list of all possible connected graphs w/ (H.nodes - k) cities if city is True 
-               otherwise list of all possible connected graphs w/ (H.edges - k) edges
-        """
-        L = []
-        if city:
-            n = H.number_of_nodes()
-            for nodes_to_remove in get_removeables(list(range(1, n)), k):
-                h = H.copy()
-                h.remove_nodes_from(nodes_to_remove)
-                if nx.is_connected(h):
-                    L.append(h)
-        else:
-            E = list(H.edges)
-            for edges_to_remove in get_removeables(E, k):
-                h = H.copy()
-                h.remove_edges_from(edges_to_remove)
-                if nx.is_connected(h):
-                    L.append(h)
-
-        return L
-
-    # Initialize
-    num_nodes, num_k, num_c = G.number_of_nodes(), 0, 0
-    if num_nodes <= 30:
-        num_k, num_c = 15, 1
-    elif num_nodes <= 50:
-        num_k, num_c = 50, 3
-    elif num_nodes <= 100:
-        num_k, num_c = 100, 5
-
-    answer = (G, nx.dijkstra_path_length(G, 0, num_nodes-1))
-    for cc in range(num_c+1):
-        less_cities = graph_generator(G, cc, True)
-        for g in less_cities:
-            # Run Dijkstra's Algorithm on every possible route on g w/ up to num_k removed edges
-            for kk in range(1, num_k+1):
-                less_edges = graph_generator(g, kk, False)
-                for graph in less_edges:
-                    p_len = nx.dijkstra_path_length(graph, 0, num_nodes-1)
-                    if p_len > answer[1]:
-                        answer = (graph, p_len)
-
-    c = [v for v in G.nodes if v not in answer[0].nodes]
-    k = [e for e in G.edges if e not in answer[0].edges]
-    return c, k
-
-
 # Here's an example of how to run your solver.
+set_type = 'medium'
+input_path = 'inputs/' + set_type + '/'
 
 # Usage: python3 solver.py test.in
 
-# if __name__ == '__main__':
-#     assert len(sys.argv) == 2
-#     path = sys.argv[1]
-#     G = read_input_file(path)
-#     c, k = solve(G)
-#     assert is_valid_solution(G, c, k)
-#     print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
-#     write_output_file(G, c, k, 'outputs/small-1.out')
+if __name__ == '__main__':
+    assert len(sys.argv) == 2
+    filename = sys.argv[1]
+    G = read_input_file(input_path + filename)
+    c, k = solve(G)
+    assert is_valid_solution(G, c, k)
+    print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
+    write_output_file(G, c, k, 'singleOutputs/' + set_type + '/' + filename[:-3] + '.out')
+
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-distance = {}
 
-input_path = 'inputs/medium/*'
-if __name__ == '__main__':
-    inputs = glob.glob(input_path)
-    for input_path in inputs:
-        output_path = 'outputs/medium/' + \
-            basename(normpath(input_path))[:-3] + '.out'
-        G = read_input_file(input_path)
-        c, k = solve(G)
-        assert is_valid_solution(G, c, k)
-        distance[input_path] = calculate_score(G, c, k)
-        write_output_file(G, c, k, output_path)
+# if __name__ == '__main__':
+#     inputs = glob.glob(input_path + '*')
+#     for input_path in inputs:
+#         output_path = 'outputs/' + set_type + '/' + \
+#             basename(normpath(input_path))[:-3] + '.out'
+#         G = read_input_file(input_path)
+#         c, k = solve(G)
+#         assert is_valid_solution(G, c, k)
+#         write_output_file(G, c, k, output_path)
