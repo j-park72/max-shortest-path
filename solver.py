@@ -108,7 +108,7 @@ def solve(G):
 
     def solver(A, k):
 
-        HTC = 3 # Heuristic
+        HTC = 3 # Heuristic - height of a tree
 
         def helper(A, k):
             if k == 0:
@@ -288,11 +288,11 @@ def naive_solve(G):
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 distance = {}
 
-input_path = 'inputs/inputs/medium/*' 
+input_path = 'inputs/inputs/large/*' 
 if __name__ == '__main__':
     inputs = glob.glob(input_path)
     for input_path in inputs:
-        output_path = 'outputs/medium2/' + basename(normpath(input_path))[:-3] + '.out'
+        output_path = 'outputs/large/' + basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
         c, k = solve(G)
         assert is_valid_solution(G, c, k)
