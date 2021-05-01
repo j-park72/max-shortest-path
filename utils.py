@@ -1,4 +1,7 @@
 import networkx as nx
+import glob
+import parse
+from os.path import basename, normpath
 
 def is_valid_solution(G, c, k):
     """
@@ -77,3 +80,15 @@ def make_graph(V, e):
     G.add_nodes_from(range(V))
 
     return G
+
+def compare_scores(set_size, path1, path2):
+    difference = {}
+    input_path = 'inputs/' + set_size + '/'
+    for input_path in glob.glob(input_path + '*'):
+        name = basename(normpath(input_path))[:-3]
+        output_path = 'tempOutputs/' + set_size + '/' + name + '.out'
+        G = parse.read_input_file(input_path)
+        g1 = parse.read_output_file(G, path1 + '/' + set_size + '/' + name + '.out')
+        g2 = parse.read_output_file(G, path2 + '/' + set_size + '/' + name + '.out')
+        difference[name] = (g1-g2,g1,g2)
+    return difference
