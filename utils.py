@@ -45,3 +45,35 @@ def calculate_score(G, c, k):
     final_min_dist = nx.dijkstra_path_length(H, 0, node_count-1)
     difference = final_min_dist - original_min_dist
     return difference
+
+
+
+# INPUT SUBMISSION
+# 30.in : make_graph(28,3.69)
+# 50.in : make_graph(48,2.119)
+# 100.in: make_graph(100,0.963)
+def make_graph(V, e):
+    '''
+    Args:
+        V: # of vertices
+        e: smallest edge length
+    Returns:
+        G: undirected graph with V vertices and min(edge length) = e
+    '''
+    def edge_maker(s, d):
+        c1 = s
+        for c2 in range(s+d, V, d):
+            edges.append(str(c1) + ' ' + str(c2) +
+                         ' ' + str(format(e*d, '.3f')))
+            c1 = c2
+
+    edges = []
+    for i in range(V):
+        for j in range(1, V):
+            if i < j:
+                edge_maker(i, j)
+
+    G = nx.parse_edgelist(edges, nodetype=int, data=(("weight", float),))
+    G.add_nodes_from(range(V))
+
+    return G
