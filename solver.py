@@ -44,7 +44,132 @@ def solve(G):
         c: list of cities to remove
         k: list of edges to remove
     """
-    pass
+
+    def get_removeables(A, c):
+        """
+        Args:
+            A: list of cities/edges that can be removed
+            c: # of cities/edges to remove
+        Returns:
+            list of nodes/edges to remove
+        """
+
+        cache = {}
+
+        def helper(A, c):
+            if len(A) == 0 or c == 0 or len(A) < c:
+                return [[]]
+            elif (str(A),c) in cache:
+                return cache[(str(A),c)]
+            R = []
+            for i,n in enumerate(A):
+                if len(A)-i >= c:
+                    for l in get_removeables(A[i+1:], c-1):
+                        R.append([n] + l)
+
+            cache[(str(A),c)] = R
+
+            return R
+
+        return helper(A,c)
+    
+    def graph_generator(H, k):
+        """
+        Args:
+            H: networkx.Graph
+            k: # of cities to remove
+        Returns:
+            L: list of all possible connected graphs w/ (H.nodes - k) cities 
+        """
+        L = []
+        nodes = list(H.nodes)
+        nodes.remove(0)
+        nodes.remove(dest)
+        for nodes_to_remove in get_removeables(nodes, k):
+            h = H.copy()
+            h.remove_nodes_from(nodes_to_remove)
+            if nx.is_connected(h):
+                L.append(h) 
+
+        return L 
+    
+    def nodes_to_edges(nodes):
+        edges = []
+
+        if len(nodes) == 0:
+            return edges
+        
+        prev = nodes[0]
+        for n in nodes[1:]:
+            edges.append((prev,n))
+            prev = n
+
+        return edges
+
+    def solver(A, k):
+
+        cache = {}
+        def helper(A, k):
+            if k == 0:
+                return [A]
+            elif A[0] in cache:
+                return cache[A[0]]
+            R = []
+            for e in A[2]:
+                H = A[0].copy()
+                H.remove_edge(e[0],e[1])
+                if nx.is_connected(H):
+                    B = (
+                        H, 
+                        nx.dijkstra_path_length(H,0,dest), 
+                        nodes_to_edges(nx.dijkstra_path(H,0,dest))
+                        )
+                    for x in helper(B, k-1):
+                        R.append(x)
+
+                # Heristic?!
+                if len(R) > len(A[2]):
+                    r = list(map(lambda x:x[1], R))
+                    M = max(r)
+                    print(M)
+                    R = [R[r.index(M)]]
+
+            
+            cache[A[0]] = R
+
+            return R
+        
+        return helper(A,k)
+
+    # while k > 0, get shortest path s-t path, for e in s-t path edges remove e then get shortest path.
+    # Then compare and go w/ max shortest path.
+
+    # Initialize
+    num_k,num_c,dest = 0,0,G.number_of_nodes()-1
+    if G.number_of_nodes() <= 30:
+        num_k,num_c = 15,1
+    elif G.number_of_nodes() <= 50:
+        num_k,num_c = 50,3
+    elif G.number_of_nodes() <= 100:
+        num_k,num_c = 100,5
+
+    answer = (G, nx.dijkstra_path_length(G,0,dest))
+    for cc in range(num_c+1):
+        less_cities = graph_generator(G, cc)
+        for g in less_cities:
+            A = (g, nx.dijkstra_path_length(g,0,dest), 
+                nodes_to_edges(nx.dijkstra_path(g,0,dest)))
+            if answer[1] <= A[1]:
+                for aa in solver(A, num_k):
+                    if answer[1] < aa[1]:
+                        answer = aa
+
+    c = [v for v in G.nodes if v not in answer[0].nodes]
+    k = [e for e in G.edges if e not in answer[0].edges]
+    return c,k
+    
+
+
 
 
 def naive_solve(G):
@@ -127,7 +252,7 @@ def naive_solve(G):
         num_k,num_c = 100,5
 
     answer = (G, nx.dijkstra_path_length(G,0,num_nodes-1))
-    for cc in range(num_c):
+    for cc in range(num_c+1):
         less_cities = graph_generator(G, cc, True)
         for g in less_cities:
             # Run Dijkstra's Algorithm on every possible route on g w/ up to num_k removed edges
