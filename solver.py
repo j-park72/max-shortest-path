@@ -70,7 +70,7 @@ def solve(G):
             if k == 0:
                 return [A]
             R = []
-            for n in A[2]:
+            for n in A[2][1:-1]:
                 H = A[0].copy()
                 H.remove_node(n)
                 if nx.is_connected(H):
@@ -100,22 +100,45 @@ def solve(G):
         num_k, num_c = 50, 3
     elif G.number_of_nodes() <= 100:
         num_k, num_c = 100, 5
-
-    # Remove edges
     dijkstra = nx.single_source_dijkstra(G,0,dest)
-    answer = (G, dijkstra[0],nodes_to_edges(dijkstra[1]))
-    A = solver(answer[0], num_k, True)
-    if answer[1] < A[1]:
-        answer = A
-    k = [e for e in G.edges if e not in answer[0].edges]
 
-    # Remove cities
-    A = solver(answer[0], num_c, False)
-    if answer[1] < A[1]:
-        answer = A
-    c = [v for v in G.nodes if v not in answer[0].nodes]
+    def edges_to_cities():
+        # Remove edges
+        answer = (G, dijkstra[0], nodes_to_edges(dijkstra[1]))
+        A = solver(answer, num_k, True)
+        if answer[1] < A[1]:
+            answer = A
+        k = [e for e in G.edges if e not in answer[0].edges]
 
-    return c, k
+        # Remove cities
+        answer = (answer[0], answer[1], nx.dijkstra_path(answer[0],0,dest))
+        A = solver(answer, num_c, False)
+        if answer[1] < A[1]:
+            answer = A
+        c = [v for v in G.nodes if v not in answer[0].nodes]
+        return c,k
+
+    def cities_to_edges():
+        # Remove cities
+        answer = (G, dijkstra[0], dijkstra[1])
+        A = solver(answer, num_c, False)
+        if answer[1] < A[1]:
+            answer = A
+        c = [v for v in G.nodes if v not in answer[0].nodes]
+
+        # Remove edges
+        answer = (answer[0], answer[1], nodes_to_edges(answer[2]))
+        A = solver(answer, num_c, True)
+        if answer[1] < A[1]:
+            answer = A
+        k = [e for e in G.edges if e not in answer[0].edges]
+
+        return c,k
+
+    e_to_c = edges_to_cities()
+    c_to_e = cities_to_edges()
+
+    return e_to_c if calculate_score(G,e_to_c[0],e_to_c[1]) > calculate_score(G,c_to_e[0],c_to_e[1]) else c_to_e
 
 
 
@@ -134,18 +157,18 @@ input_path = 'inputs/' + set_type + '/'
 #     c, k = solve(G)
 #     assert is_valid_solution(G, c, k)
 #     print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
-#     write_output_file(G, c, k, 'singleOutputs/' + set_type + '/' + filename[:-3] + '.out')
+#     write_output_file(G, c, k, 'tempOutputs/' + set_type + '/' + filename[:-3] + '.out')
 
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 
-# if __name__ == '__main__':
-#     inputs = glob.glob(input_path + '*')
-#     for input_path in inputs:
-#         output_path = 'outputs/' + set_type + '/' + \
-#             basename(normpath(input_path))[:-3] + '.out'
-#         G = read_input_file(input_path)
-#         c, k = solve(G)
-#         assert is_valid_solution(G, c, k)
-#         write_output_file(G, c, k, output_path)
+if __name__ == '__main__':
+    inputs = glob.glob(input_path + '*')
+    for input_path in inputs:
+        output_path = 'tempOutputs/' + set_type + '/' + \
+            basename(normpath(input_path))[:-3] + '.out'
+        G = read_input_file(input_path)
+        c, k = solve(G)
+        assert is_valid_solution(G, c, k)
+        write_output_file(G, c, k, output_path)
