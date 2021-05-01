@@ -108,12 +108,11 @@ def solve(G):
 
     def solver(A, k):
 
-        cache = {}
+        HTC = 3 # Heuristic
+
         def helper(A, k):
             if k == 0:
                 return [A]
-            elif A[0] in cache:
-                return cache[A[0]]
             R = []
             for e in A[2]:
                 H = A[0].copy()
@@ -124,22 +123,21 @@ def solve(G):
                         nx.dijkstra_path_length(H,0,dest), 
                         nodes_to_edges(nx.dijkstra_path(H,0,dest))
                         )
+                        
                     for x in helper(B, k-1):
                         R.append(x)
 
-                # Heristic?!
-                if len(R) > len(A[2]):
-                    r = list(map(lambda x:x[1], R))
-                    M = max(r)
-                    print(M)
-                    R = [R[r.index(M)]]
-
-            
-            cache[A[0]] = R
-
             return R
-        
-        return helper(A,k)
+
+        while k > 0:
+            R = helper(A,k) if k < HTC else helper(A,HTC)
+            r = list(map(lambda x:x[1], R))
+            if len(r) == 0:
+                break
+            A = R[r.index(max(r))]
+            k -= HTC
+
+        return A
 
     # while k > 0, get shortest path s-t path, for e in s-t path edges remove e then get shortest path.
     # Then compare and go w/ max shortest path.
@@ -160,9 +158,9 @@ def solve(G):
             A = (g, nx.dijkstra_path_length(g,0,dest), 
                 nodes_to_edges(nx.dijkstra_path(g,0,dest)))
             if answer[1] <= A[1]:
-                for aa in solver(A, num_k):
-                    if answer[1] < aa[1]:
-                        answer = aa
+                A = solver(A, num_k)
+                if answer[1] < A[1]:
+                    answer = A
 
     c = [v for v in G.nodes if v not in answer[0].nodes]
     k = [e for e in G.edges if e not in answer[0].edges]
@@ -283,13 +281,17 @@ def naive_solve(G):
 
 
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-# input_path = 'inputs/inputs' WRONG PATH FIX IT!!
-# if __name__ == '__main__':
-#     inputs = glob.glob(input_path)
-#     for input_path in inputs:
-#         output_path = 'outputs/' + basename(normpath(input_path))[:-3] + '.out'
-#         G = read_input_file(input_path)
-#         c, k = solve(G)
-#         assert is_valid_solution(G, c, k)
-#         distance = calculate_score(G, c, k)
-#         write_output_file(G, c, k, output_path)
+distance = {}
+
+input_path = 'inputs/inputs/small/*' 
+if __name__ == '__main__':
+    inputs = glob.glob(input_path)
+    for input_path in inputs:
+        output_path = 'outputs/small/' + basename(normpath(input_path))[:-3] + '.out'
+        G = read_input_file(input_path)
+        c, k = solve(G)
+        assert is_valid_solution(G, c, k)
+        distance[input_path] = calculate_score(G, c, k)
+        write_output_file(G, c, k, output_path)
+
+
