@@ -73,21 +73,21 @@ def solve(G):
 
         return helper(A,c)
     
-    def graph_generator(H, k):
+    def graph_generator(H):
         """
         Args:
             H: networkx.Graph
             k: # of cities to remove
         Returns:
-            L: list of all possible connected graphs w/ (H.nodes - k) cities 
+            L: list of all possible connected graphs w/ (H.nodes - 1) cities 
         """
         L = []
         nodes = list(H.nodes)
         nodes.remove(0)
         nodes.remove(dest)
-        for nodes_to_remove in get_removeables(nodes, k):
+        for node in nodes:
             h = H.copy()
-            h.remove_nodes_from(nodes_to_remove)
+            h.remove_node(node)
             if nx.is_connected(h):
                 L.append(h) 
 
@@ -152,18 +152,23 @@ def solve(G):
         num_k,num_c = 100,5
 
     answer = (G, nx.dijkstra_path_length(G,0,dest))
-    for cc in range(num_c+1):
-        less_cities = graph_generator(G, cc)
+    A = (G, nx.dijkstra_path_length(G,0,dest), 
+        nodes_to_edges(nx.dijkstra_path(G,0,dest)))
+    if answer[1] <= A[1]:
+        A = solver(A, num_k)
+        if answer[1] < A[1]:
+            answer = A
+    for cc in range(num_c):
+        less_cities = graph_generator(answer[0])
         for g in less_cities:
             A = (g, nx.dijkstra_path_length(g,0,dest), 
                 nodes_to_edges(nx.dijkstra_path(g,0,dest)))
-            if answer[1] <= A[1]:
-                A = solver(A, num_k)
-                if answer[1] < A[1]:
-                    answer = A
+            if answer[1] < A[1]:
+                answer = A
 
     c = [v for v in G.nodes if v not in answer[0].nodes]
     k = [e for e in G.edges if e not in answer[0].edges]
+
     return c,k
     
 
@@ -283,11 +288,11 @@ def naive_solve(G):
 # For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
 distance = {}
 
-input_path = 'inputs/inputs/small/*' 
+input_path = 'inputs/inputs/medium/*' 
 if __name__ == '__main__':
     inputs = glob.glob(input_path)
     for input_path in inputs:
-        output_path = 'outputs/small/' + basename(normpath(input_path))[:-3] + '.out'
+        output_path = 'outputs/medium2/' + basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
         c, k = solve(G)
         assert is_valid_solution(G, c, k)
