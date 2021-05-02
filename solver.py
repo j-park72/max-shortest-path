@@ -26,8 +26,8 @@ def solve(G):
     """
 
     # Heuristic: height of a shortest-path-tree to merge
-    HTC_VERTICAL = 1
-    HTC_HORIZONTAL = 100
+    HTC_VERTICAL = 10
+    HTC_HORIZONTAL = 1
 
     def nodes_to_edges(nodes):
         """
@@ -81,7 +81,6 @@ def solve(G):
                     B = (H, shortest_path[0], shortest_path[1])
                     for x in down_node_tree(B, k-1):
                         R.append(x)
-                    R = sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
             return sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
         
         recurser = down_edge_tree if is_edges else down_node_tree
@@ -148,7 +147,7 @@ def solve(G):
 
 
 # Here's an example of how to run your solver.
-set_type = 'medium'
+set_type = 'small'
 input_path = 'inputs/' + set_type + '/'
 
 # Usage: python3 solver.py test.in

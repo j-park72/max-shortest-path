@@ -3,6 +3,7 @@ import glob
 import parse
 from os.path import basename, normpath
 import shutil
+import os
 
 def is_valid_solution(G, c, k):
     """
@@ -89,9 +90,12 @@ def compare_scores(set_size, new_output_path, old_output_path):
         name = basename(normpath(input_path))[:-3]
         output_path = 'tempOutputs/' + set_size + '/' + name + '.out'
         G = parse.read_input_file(input_path)
-        g1 = parse.read_output_file(G, new_output_path + '/' + set_size + '/' + name + '.out')
-        g2 = parse.read_output_file(G, old_output_path + '/' + set_size + '/' + name + '.out')
-        difference[name] = (g1-g2,g1,g2)
+        new_output = new_output_path + '/' + set_size + '/' + name + '.out'
+        old_output = old_output_path + '/' + set_size + '/' + name + '.out'
+        if os.path.exists(new_output) and os.path.exists(old_output):
+            g1 = parse.read_output_file(G, new_output)
+            g2 = parse.read_output_file(G, old_output)
+            difference[name] = (g1-g2,g1,g2)
     return difference
 
 def move_better_outputs(set_size, new_output_path, old_output_path):
