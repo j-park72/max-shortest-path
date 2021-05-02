@@ -2,6 +2,7 @@ import networkx as nx
 from parse import read_input_file, write_output_file
 from utils import is_valid_solution, calculate_score
 import sys
+import os
 from os.path import basename, normpath
 import glob
 
@@ -25,7 +26,8 @@ def solve(G):
     """
 
     # Heuristic: height of a shortest-path-tree to merge
-    HTC = 5
+    HTC_VERTICAL = 5
+    HTC_HORIZONTAL = 8
 
     def nodes_to_edges(nodes):
         """
@@ -52,6 +54,7 @@ def solve(G):
         Returns:
             A: tuple of G w/ k removed nodes/edges that has the max-shortest-path
         """
+
         def down_edge_tree(A, k):
             if k == 0:
                 return [A]
@@ -64,7 +67,8 @@ def solve(G):
                     B = (H,shortest_path[0],nodes_to_edges(shortest_path[1]))
                     for x in down_edge_tree(B, k-1):
                         R.append(x)
-            return R
+                    R = sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
+            return sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
 
         def down_node_tree(A, k):
             if k == 0:
@@ -78,17 +82,17 @@ def solve(G):
                     B = (H, shortest_path[0], shortest_path[1])
                     for x in down_node_tree(B, k-1):
                         R.append(x)
-            return R
+                    R = sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
+            return sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
         
         recurser = down_edge_tree if is_edges else down_node_tree
 
         while k > 0:
-            R = recurser(A, k) if k < HTC else recurser(A, HTC)
-            r = list(map(lambda x: x[1], R))
-            if len(r) == 0:
+            R = recurser(A, k) if k < HTC_VERTICAL else recurser(A, HTC_VERTICAL)
+            if len(R) == 0:
                 break
-            A = R[r.index(max(r))]
-            k -= HTC
+            A = R[-1]
+            k -= HTC_VERTICAL
 
         return A
 
@@ -145,7 +149,7 @@ def solve(G):
 
 
 # Here's an example of how to run your solver.
-set_type = 'small'
+set_type = 'medium'
 input_path = 'inputs/' + set_type + '/'
 
 # Usage: python3 solver.py test.in
@@ -170,6 +174,7 @@ if __name__ == '__main__':
             basename(normpath(input_path))[:-3] + '.out'
         G = read_input_file(input_path)
         print('solving', basename(normpath(input_path))[:-3])
-        c, k = solve(G)
-        assert is_valid_solution(G, c, k)
-        write_output_file(G, c, k, output_path)
+        if not os.path.exists(output_path):
+            c, k = solve(G)
+            assert is_valid_solution(G, c, k)
+            write_output_file(G, c, k, output_path)
