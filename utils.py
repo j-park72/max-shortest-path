@@ -2,6 +2,7 @@ import networkx as nx
 import glob
 import parse
 from os.path import basename, normpath
+import shutil
 
 def is_valid_solution(G, c, k):
     """
@@ -81,14 +82,22 @@ def make_graph(V, e):
 
     return G
 
-def compare_scores(set_size, path1, path2):
+def compare_scores(set_size, new_output_path, old_output_path):
     difference = {}
     input_path = 'inputs/' + set_size + '/'
     for input_path in glob.glob(input_path + '*'):
         name = basename(normpath(input_path))[:-3]
         output_path = 'tempOutputs/' + set_size + '/' + name + '.out'
         G = parse.read_input_file(input_path)
-        g1 = parse.read_output_file(G, path1 + '/' + set_size + '/' + name + '.out')
-        g2 = parse.read_output_file(G, path2 + '/' + set_size + '/' + name + '.out')
+        g1 = parse.read_output_file(G, new_output_path + '/' + set_size + '/' + name + '.out')
+        g2 = parse.read_output_file(G, old_output_path + '/' + set_size + '/' + name + '.out')
         difference[name] = (g1-g2,g1,g2)
     return difference
+
+def move_better_outputs(set_size, new_output_path, old_output_path):
+    diff = compare_scores(set_size, new_output_path, old_output_path)
+    for name in diff:
+        if diff[name][0] > 0:
+            original = new_output_path + '/' + set_size + '/' + name + '.out'
+            target   = old_output_path + '/' + set_size + '/' + name + '.out'
+            shutil.copyfile(original, target)
