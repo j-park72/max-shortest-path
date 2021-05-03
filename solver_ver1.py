@@ -4,6 +4,10 @@ from os.path import basename, normpath
 import glob
 
 
+# The main idea here is to come up with a shortest-path-tree
+# by removing edges/cities from parent graph's shortest path.
+# First remove edges using heuristic variable, HTC which determines how deep I go down the tree.
+# Then remove vertices one at a time, only if graph w/ removed vertices has greater shortest path length.
 
 def solve(G):
     """
@@ -13,34 +17,6 @@ def solve(G):
         c: list of cities to remove
         k: list of edges to remove
     """
-
-    def get_removeables(A, c):
-        """
-        Args:
-            A: list of cities/edges that can be removed
-            c: # of cities/edges to remove
-        Returns:
-            list of nodes/edges to remove
-        """
-
-        cache = {}
-
-        def helper(A, c):
-            if len(A) == 0 or c == 0 or len(A) < c:
-                return [[]]
-            elif (str(A), c) in cache:
-                return cache[(str(A), c)]
-            R = []
-            for i, n in enumerate(A):
-                if len(A)-i >= c:
-                    for l in get_removeables(A[i+1:], c-1):
-                        R.append([n] + l)
-
-            cache[(str(A), c)] = R
-
-            return R
-
-        return helper(A, c)
 
     def graph_generator(H):
         """
@@ -108,9 +84,6 @@ def solve(G):
 
         return A
 
-    # while k > 0, get shortest path s-t path, for e in s-t path edges remove e then get shortest path.
-    # Then compare and go w/ max shortest path.
-
     # Initialize
     num_k, num_c, dest = 0, 0, G.number_of_nodes()-1
     if G.number_of_nodes() <= 30:
@@ -136,6 +109,8 @@ def solve(G):
                  nodes_to_edges(nx.dijkstra_path(g, 0, dest)))
             if answer[1] < A[1]:
                 answer = A
+            else:
+                break
     c = [v for v in G.nodes if v not in answer[0].nodes]
 
     return c, k

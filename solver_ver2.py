@@ -1,16 +1,17 @@
 import networkx as nx
 import sys
+from utils import calculate_score
 from os.path import basename, normpath
 import glob
 
 
-# The main idea here is to come up with a shortest-path-tree 
+# The main idea here is to come up with a shortest-path-tree
 # by removing edges/cities from parent graph's shortest path.
-# Use Heuristic, HTC which determines how deep I go down the tree 
+# Use heuristic variable, HTC which determines how deep I go down the tree
 # since going all the way down the tree takes up too much resources.
 # e.g. height of tree = 5, HTC = 2:
-# I go down the tree 2 height then amongst the graphs I have so far, I find the one w/ max shortest path. 
-# Then go 2 more down the tree and so on until I reach the bottom of the tree. 
+# I go down the tree 2 height then amongst the graphs I have so far, I find the one w/ max shortest path.
+# Then go 2 more down the tree and so on until I reach the bottom of the tree.
 # Then compare and go w/ max shortest path.
 
 def solve(G):
@@ -31,7 +32,7 @@ def solve(G):
             nodes: list of nodes to convert
         Returns:
             L: converted list of edges
-        """ 
+        """
         edges = []
         if len(nodes) == 0:
             return edges
@@ -58,8 +59,8 @@ def solve(G):
                 H = A[0].copy()
                 H.remove_edge(e[0], e[1])
                 if nx.is_connected(H):
-                    shortest_path = nx.single_source_dijkstra(H,0,dest)
-                    B = (H,shortest_path[0],nodes_to_edges(shortest_path[1]))
+                    shortest_path = nx.single_source_dijkstra(H, 0, dest)
+                    B = (H, shortest_path[0], nodes_to_edges(shortest_path[1]))
                     for x in down_edge_tree(B, k-1):
                         R.append(x)
             return R
@@ -72,12 +73,12 @@ def solve(G):
                 H = A[0].copy()
                 H.remove_node(n)
                 if nx.is_connected(H):
-                    shortest_path = nx.single_source_dijkstra(H,0,dest)
+                    shortest_path = nx.single_source_dijkstra(H, 0, dest)
                     B = (H, shortest_path[0], shortest_path[1])
                     for x in down_node_tree(B, k-1):
                         R.append(x)
             return R
-        
+
         recurser = down_edge_tree if is_edges else down_node_tree
 
         while k > 0:
@@ -98,7 +99,7 @@ def solve(G):
         num_k, num_c = 50, 3
     elif G.number_of_nodes() <= 100:
         num_k, num_c = 100, 5
-    dijkstra = nx.single_source_dijkstra(G,0,dest)
+    dijkstra = nx.single_source_dijkstra(G, 0, dest)
 
     def edges_to_cities():
         # Remove edges
@@ -109,12 +110,12 @@ def solve(G):
         k = [e for e in G.edges if e not in answer[0].edges]
 
         # Remove cities
-        answer = (answer[0], answer[1], nx.dijkstra_path(answer[0],0,dest))
+        answer = (answer[0], answer[1], nx.dijkstra_path(answer[0], 0, dest))
         A = solver(answer, num_c, False)
         if answer[1] < A[1]:
             answer = A
         c = [v for v in G.nodes if v not in answer[0].nodes]
-        return c,k
+        return c, k
 
     def cities_to_edges():
         # Remove cities
@@ -131,10 +132,9 @@ def solve(G):
             answer = A
         k = [e for e in G.edges if e not in answer[0].edges]
 
-        return c,k
+        return c, k
 
     e_to_c = edges_to_cities()
     c_to_e = cities_to_edges()
 
-    return e_to_c if calculate_score(G,e_to_c[0],e_to_c[1]) > calculate_score(G,c_to_e[0],c_to_e[1]) else c_to_e
-
+    return e_to_c if calculate_score(G, e_to_c[0], e_to_c[1]) > calculate_score(G, c_to_e[0], c_to_e[1]) else c_to_e
