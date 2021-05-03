@@ -7,18 +7,18 @@ from os.path import basename, normpath
 import glob
 
 
-# The main idea here is to come up with a shortest-path-tree
-# by removing edges/cities from parent graph's shortest path.
-# Use two Heuristics, HTC_V, HTC_H which determines how deep and wide I expand the tree
-# since going all the way down the tree takes up too much resources.
-# e.g. height of tree = 5, HTC_V = 2, HTC_H = 3:
-# Go down the tree 2 height while making sure the length of my return list is at max 3.
-# Then amongst the graphs I have so far, I find the one w/ max shortest path.
-# Then go 2 more down the tree while keeping its width to 2 and so on until I reach the bottom of the tree.
-# Then compare and go w/ max shortest path.
-
 def solve(G):
     """
+    The main idea here is to come up with a shortest-path-tree
+    by removing edges/cities from parent graph's shortest path.
+    Use two Heuristics, HTC_V, HTC_H which determines how deep and wide I expand the tree
+    since going all the way down the tree takes up too much resources.
+    e.g. height of tree = 5, HTC_V = 2, HTC_H = 3:
+    Go down the tree 2 height while making sure the length of my return list is at max 3.
+    Then amongst the graphs I have so far, I find the one w / max shortest path.
+    Then go 2 more down the tree while keeping its width to 2 and so on until I reach the bottom of the tree.
+    Then compare and go w / max shortest path.
+
     Args:
         G: networkx.Graph
     Returns:

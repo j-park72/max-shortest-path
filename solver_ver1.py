@@ -4,13 +4,13 @@ from os.path import basename, normpath
 import glob
 
 
-# The main idea here is to come up with a shortest-path-tree
-# by removing edges/cities from parent graph's shortest path.
-# First remove edges using heuristic variable, HTC which determines how deep I go down the tree.
-# Then remove vertices one at a time, only if graph w/ removed vertices has greater shortest path length.
-
 def solve(G):
     """
+    The main idea here is to come up with a shortest-path-tree
+    by removing edges/cities from parent graph's shortest path.
+    First remove edges using heuristic variable, HTC which determines how deep I go down the tree.
+    Then remove vertices one at a time, only if graph w/ removed vertices has greater shortest path length.
+
     Args:
         G: networkx.Graph
     Returns:
