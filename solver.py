@@ -11,12 +11,13 @@ def solve(G):
     """
     The main idea here is to come up with a shortest-path-tree
     by removing edges/cities from parent graph's shortest path.
-    Use heuristic variable, HTC which determines how deep I go down the tree
+    Use two Heuristics, HTC_V, HTC_H which determines how deep and wide I expand the tree
     since going all the way down the tree takes up too much resources.
-    e.g. height of tree = 5, HTC = 2:
-    I go down the tree 2 height then amongst the graphs I have so far, I find the one w/ max shortest path.
-    Then go 2 more down the tree and so on until I reach the bottom of the tree.
-    Then compare and go w/ max shortest path.
+    e.g. height of tree = 5, HTC_V = 2, HTC_H = 3:
+    Go down the tree 2 height while making sure the length of my return list is at max 3.
+    Then amongst the graphs I have so far, I find the one w / max shortest path.
+    Then go 2 more down the tree while keeping its width to 2 and so on until I reach the bottom of the tree.
+    Then compare and go w / max shortest path.
 
     Args:
         G: networkx.Graph
@@ -24,6 +25,10 @@ def solve(G):
         c: list of cities to remove
         k: list of edges to remove
     """
+
+    # Heuristic: height of a shortest-path-tree to merge
+    HTC_VERTICAL = 3
+    HTC_HORIZONTAL = 10
 
     def nodes_to_edges(nodes):
         """
@@ -50,6 +55,7 @@ def solve(G):
         Returns:
             A: tuple of G w/ k removed nodes/edges that has the max-shortest-path
         """
+
         def down_edge_tree(A, k):
             if k == 0:
                 return [A]
@@ -62,10 +68,7 @@ def solve(G):
                     B = (H, shortest_path[0], nodes_to_edges(shortest_path[1]))
                     for x in down_edge_tree(B, k-1):
                         R.append(x)
-            if len(R) > 0:
-                r = list(map(lambda x: x[1], R))
-                R = [R[r.index(max(r))]]
-            return R
+            return sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
 
         def down_node_tree(A, k):
             if k == 0:
@@ -79,16 +82,19 @@ def solve(G):
                     B = (H, shortest_path[0], shortest_path[1])
                     for x in down_node_tree(B, k-1):
                         R.append(x)
-            if len(R) > 0:
-                r = list(map(lambda x: x[1], R))
-                R = [R[r.index(max(r))]]
-            return R
+            return sorted(R, key=lambda x: x[1])[-HTC_HORIZONTAL:]
 
         recurser = down_edge_tree if is_edges else down_node_tree
 
-        R = recurser(A, k)
+        while k > 0:
+            R = recurser(A, k) if k < HTC_VERTICAL else recurser(
+                A, HTC_VERTICAL)
+            if len(R) == 0:
+                break
+            A = R[-1]
+            k -= HTC_VERTICAL
 
-        return R[0] if len(R) > 0 else A
+        return A
 
     # Initialize
     num_k, num_c, dest = 0, 0, G.number_of_nodes()-1
