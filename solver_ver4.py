@@ -1,8 +1,6 @@
 import networkx as nx
-from parse import read_input_file, write_output_file
-from utils import is_valid_solution, calculate_score
 import sys
-import os
+from utils import calculate_score
 from os.path import basename, normpath
 import glob
 
@@ -137,34 +135,3 @@ def solve(G):
     c_to_e = cities_to_edges()
 
     return e_to_c if calculate_score(G, e_to_c[0], e_to_c[1]) > calculate_score(G, c_to_e[0], c_to_e[1]) else c_to_e
-
-
-# Here's an example of how to run your solver.
-set_type = 'small'
-input_path = 'inputs/' + set_type + '/'
-
-# Usage: python3 solver.py test.in
-
-# if __name__ == '__main__':
-#     assert len(sys.argv) == 2
-#     filename = sys.argv[1]
-#     G = read_input_file(input_path + filename)
-#     c, k = solve(G)
-#     assert is_valid_solution(G, c, k)
-#     print("Shortest Path Difference: {}".format(calculate_score(G, c, k)))
-#     write_output_file(G, c, k, 'tempOutputs/' + set_type + '/' + filename[:-3] + '.out')
-
-
-# For testing a folder of inputs to create a folder of outputs, you can use glob (need to import it)
-
-if __name__ == '__main__':
-    inputs = glob.glob(input_path + '*')
-    for input_path in inputs:
-        output_path = 'tempOutputs/' + set_type + '/' + \
-            basename(normpath(input_path))[:-3] + '.out'
-        G = read_input_file(input_path)
-        print('solving', basename(normpath(input_path))[:-3])
-        if not os.path.exists(output_path):
-            c, k = solve(G)
-            assert is_valid_solution(G, c, k)
-            write_output_file(G, c, k, output_path)
